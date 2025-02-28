@@ -1,6 +1,6 @@
 ---
 title: "Dataframes - In Class lab"
-author: "Dr. Shoemaker"
+author: "Fatima Tanvir"
 date: "DATA 2401"
 output: html_document
 ---
@@ -9,6 +9,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
+
+
+```{r}
+# In class Lab: Dash is the a womens soccer team
+dash_scored<- c(1, 0, 3, 1)
+dash_against<- c(5, 0, 2, 3)
+opponents <- c("North Carolina Courage", "Racing Louisville FC", "Bay FC",  "Washington Spirit")
+
+games <- data.frame(dash_scored, dash_against)
+games$diff <- games$dash_against - games$dash_scored
+games$won <- games$dash_scored > games$dash_against
+games$opponents <- opponents
+
+view(games)
+```
+
+
 
 # Working with loaded in csv files
 
@@ -21,7 +38,6 @@ Use the `read.csv()` function to read the data from the `gates_donations.csv` fi
 
 grants <- read_csv("gates_donations.csv")
 
-
 head(grants)
 ```
 
@@ -30,6 +46,7 @@ Because you're in an RProject, you don't need to set your working directory in R
 - Use the glimpse function to look at the loaded data
 
 ```{r}
+glimpse(grants)
 
 
 ```
@@ -38,15 +55,14 @@ Because you're in an RProject, you don't need to set your working directory in R
 - Create a variable `org` that contains the `organization` column of the dataset
 
 ```{r}
-
-
+org <- grants$organization
 ```
 
 
 - Confirm that the "organization" column is a vector using the `is.vector()` function. (This is a useful debugging tip if you hit errors later!)
 
 ```{r}
-
+is.vector(org)
 
 ```
 
@@ -56,48 +72,55 @@ Now you can ask some interesting questions about the dataset:
 - What was the mean grant value?
 
 ```{r}
-
+grant_value <- mean(grants$total_amount)
+grant_value
 ```
 
 
 - What was the dollar amount of the largest grant?
 
 ```{r}
-
+largest_grant <- max(grants$total_amount)
+largest_grant
 ```
 
 
 - What was the dollar amount of the smallest grant?
 
 ```{r}
-
+smallest_grant <- min(grants$total_amount)
+smallest_grant
 ```
 
 
 - Which organization received the largest grant?
 
 ```{r}
-
-
+largest_grant_org <- grants$organization[which.max(grants$total_amount)]
+largest_grant_org
 ```
 
 
 - Which organization received the smallest grant?
 
 ```{r}
-
+smallest_grant_org <- grants$organization[which.min(grants$total_amount)]
+smallest_grant_org
 ```
 
 - How many grants were awarded in 2010?
 
 ```{r}
-
+grants_2010_count <- sum(grants$start_year == 2010)
+grants_2010_count
 ```
+
 
 - How much was awarded in 2010? 
 
 ```{r}
-
+grants_2010_total <- sum(grants$total_amount[grants$start_year == 2010])
+grants_2010_total
 ```
 
 
@@ -123,13 +146,14 @@ Luckily, you can pass the USPersonalExpenditure variable as an argument to the `
 Do this, storing the result in a new variable
 
 ```{r}
+us_expenditure_df <- as.data.frame(USPersonalExpenditure)
 
 ```
 
 
 What are the current column names of your dataframe?
 ```{r}
-
+colnames(us_expenditure_df)
 ```
 
 
@@ -137,52 +161,65 @@ Consider: why are they so strange? (Think about whether you could use a number l
 
 What are the current row names of your dataframe?
 ```{r}
-
+rownames(us_expenditure_df)
 ```
 
 
 Add a column "Category" to your data frame that contains the rownames
 
 ```{r}
-
+us_expenditure_df$Category <- rownames(us_expenditure_df)
 ```
 
 Consider how this data isn't tidy. Use the `pivot_longer()` function from last class to make the data tidy. 
 
 ```{r}
-
+tidy_us_expenditure <- pivot_longer(
+  us_expenditure_df,
+  cols = -Category,
+  names_to = "Year",
+  values_to = "Expenditure"
+)
 ```
 
 
 How much money was spent on personal care in 1940?
 ```{r}
-
+personal_care_1940 <- tidy_us_expenditure$Expenditure[
+  tidy_us_expenditure$Category == "Personal Care" & tidy_us_expenditure$Year == "1940"
+]
+personal_care_1940
 ```
 
 
 How much money was spent on Food and Tobacco in 1960?
 ```{r}
-
-
+food_tobacco_1960 <- tidy_us_expenditure$Expenditure[
+  tidy_us_expenditure$Category == "Food and Tobacco" & tidy_us_expenditure$Year == "1960"
+]
+food_tobacco_1960
 ```
 
 
 What was the highest expenditure category in 1960?
 ```{r}
-
-
+expenditure_1960 <- tidy_us_expenditure[tidy_us_expenditure$Year == "1960", ]
+highest_expenditure_1960 <- expenditure_1960$Category[which.max(expenditure_1960$Expenditure)]
+highest_expenditure_1960
 ```
 
 
 Define a function `lowest_category` that takes in a year as a parameter, and returns the lowest spending category of that year
 ```{r}
-
-
-
+lowest_category <- function(year) {
+  expenditure_year <- tidy_us_expenditure[tidy_us_expenditure$Year == as.character(year), ]
+  lowest_category_year <- expenditure_year$Category[which.min(expenditure_year$Expenditure)]
+  return(lowest_category_year)
+}
 ```
 
 ```{r}
-
+lowest_category(1940)
 ```
 
 
@@ -190,5 +227,7 @@ Using your function, determine the lowest spending category of each year
 Hint: use the `sapply()` function to apply your function to a vector of years
 
 ```{r}
-
+years <- unique(tidy_us_expenditure$Year)
+lowest_categories <- sapply(years, lowest_category)
+lowest_categories
 ```
